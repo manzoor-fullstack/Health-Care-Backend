@@ -14,6 +14,11 @@ const patientSchema = new mongoose.Schema(
     phone: String,
     medicalNotes: String,
     profilePic: String,
+    status: {
+      type: String,
+      enum: ["active", "blocked"],
+      default: "active",
+    },
   },
   { timestamps: true }
 );

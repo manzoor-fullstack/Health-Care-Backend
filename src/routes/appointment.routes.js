@@ -6,8 +6,8 @@ import {
   approveAppointment,
   rejectAppointment,
   deleteAppointment,
-  getAppointments
-} from '../controllers/appointment.controller.js';
+  getAppointments,
+} from "../controllers/appointment.controller.js";
 
 const router = express.Router();
 
@@ -26,27 +26,37 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - doctor
+ *               - doctorId
  *               - date
+ *               - time
  *             properties:
- *               doctor:
+ *               doctorId:
  *                 type: string
- *                 description: Name of the doctor
+ *                 example: 66c9a2f0a9b8c123456789ab
+ *                 description: Doctor MongoDB ID
  *               date:
  *                 type: string
- *                 format: date-time
- *                 description: Appointment date and time
+ *                 example: 2026-01-15
+ *                 description: Appointment date (YYYY-MM-DD)
+ *               time:
+ *                 type: string
+ *                 example: 14:30
+ *                 description: Appointment time (HH:mm)
+ *               symptoms:
+ *                 type: string
+ *                 example: Fever and headache
+ *                 description: Patient symptoms
  *     responses:
  *       201:
  *         description: Appointment created successfully
+ *       400:
+ *         description: Doctor not found or invalid data
  *       403:
  *         description: Access forbidden (not patient)
- *       404:
- *         description: Doctor not found
  *       500:
  *         description: Internal server error
  */
-router.post('/', authMiddleware, roleMiddleware('patient'), createAppointment);
+router.post("/", authMiddleware, roleMiddleware("patient"), createAppointment);
 
 /**
  * @swagger
@@ -73,7 +83,12 @@ router.post('/', authMiddleware, roleMiddleware('patient'), createAppointment);
  *       500:
  *         description: Internal server error
  */
-router.patch('/:id/approve', authMiddleware, roleMiddleware('doctor'), approveAppointment);
+router.patch(
+  "/:id/approve",
+  authMiddleware,
+  roleMiddleware("doctor"),
+  approveAppointment
+);
 
 /**
  * @swagger
@@ -100,7 +115,12 @@ router.patch('/:id/approve', authMiddleware, roleMiddleware('doctor'), approveAp
  *       500:
  *         description: Internal server error
  */
-router.patch('/:id/reject', authMiddleware, roleMiddleware('doctor'), rejectAppointment);
+router.patch(
+  "/:id/reject",
+  authMiddleware,
+  roleMiddleware("doctor"),
+  rejectAppointment
+);
 
 /**
  * @swagger
@@ -127,7 +147,12 @@ router.patch('/:id/reject', authMiddleware, roleMiddleware('doctor'), rejectAppo
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id', authMiddleware, roleMiddleware('admin'), deleteAppointment);
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware("admin"),
+  deleteAppointment
+);
 
 /**
  * @swagger

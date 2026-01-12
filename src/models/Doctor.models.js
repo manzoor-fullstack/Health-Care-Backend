@@ -13,6 +13,11 @@ const DoctorSchema = new mongoose.Schema(
     address: { type: String },
     fee: { type: Number },
     profilePic: { type: String },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "blocked"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

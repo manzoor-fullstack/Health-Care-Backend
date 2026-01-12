@@ -1,26 +1,48 @@
 import Appointment from "../models/Appointment.models.js";
 import User from "../models/User.models.js";
+import Doctor from '../models/Doctor.models.js'
 
 // Patient → Create Appointment
 const createAppointment = async (req, res) => {
   try {
-    const { doctor, date, notes } = req.body;
+    const { doctorId, date, time, symptoms } = req.body;
 
-    const doctorExists = await User.findById(doctor);
-    if (!doctorExists || doctorExists.role !== "doctor") {
+
+    const doctorExists = await Doctor.findById(doctorId);
+    console.log("doctor exists", doctorExists);
+    if (!doctorExists) {
       return res.status(400).json({ message: "Doctor not found" });
+    }
+
+    if (!date || !time) {
+      return res.status(400).json({ message: "Date and time are required" });
+    }
+
+    // ✅ combine date + time
+    const appointmentDateTime = new Date(`${date}T${time}`);
+
+    if (appointmentDateTime < new Date()) {
+      return res.status(400).json({ message: "Cannot book past appointment" });
     }
 
     const appointment = await Appointment.create({
       patient: req.user.id,
-      doctor,
-      date,
-      notes,
+      doctor: doctorId,
+      appointmentDateTime,
+      symptoms,
+      fee: 2000,
     });
 
-    res.status(201).json({ message: "Appointment created", appointment });
+    res.status(201).json({
+      success: true,
+      message: "Appointment created",
+      appointment,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
@@ -31,27 +53,39 @@ const approveAppointment = async (req, res) => {
     const appointment = await Appointment.findById(id);
 
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
     }
 
     if (appointment.status === "approved") {
-      return res.status(400).json({ success: false, message: "Appointment already approved" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Appointment already approved" });
     }
 
     if (appointment.status === "rejected") {
-      return res.status(400).json({ success: false, message: "Cannot approve a rejected appointment" });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot approve a rejected appointment",
+      });
     }
 
     appointment.status = "approved";
     appointment.approvedAt = new Date();
     await appointment.save();
 
-    res.status(200).json({ success: true, message: "Appointment approved", appointment });
+    res
+      .status(200)
+      .json({ success: true, message: "Appointment approved", appointment });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error approving appointment", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error approving appointment",
+      error: error.message,
+    });
   }
 };
-
 
 // Doctor → Reject Appointment
 const rejectAppointment = async (req, res) => {
@@ -60,27 +94,39 @@ const rejectAppointment = async (req, res) => {
     const appointment = await Appointment.findById(id);
 
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
     }
 
     if (appointment.status === "rejected") {
-      return res.status(400).json({ success: false, message: "Appointment already rejected" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Appointment already rejected" });
     }
 
     if (appointment.status === "approved") {
-      return res.status(400).json({ success: false, message: "Cannot reject an approved appointment" });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot reject an approved appointment",
+      });
     }
 
     appointment.status = "rejected";
     appointment.rejectedAt = new Date();
     await appointment.save();
 
-    res.status(200).json({ success: true, message: "Appointment rejected", appointment });
+    res
+      .status(200)
+      .json({ success: true, message: "Appointment rejected", appointment });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error rejecting appointment", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error rejecting appointment",
+      error: error.message,
+    });
   }
 };
-
 
 // Admin → Delete Appointment
 const deleteAppointment = async (req, res) => {
@@ -122,13 +168,13 @@ const getAppointments = async (req, res) => {
     res.status(200).json({
       success: true,
       count: appointments.length,
-      appointments
+      appointments,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Failed to fetch appointments",
-      error: error.message
+      error: error.message,
     });
   }
 };
